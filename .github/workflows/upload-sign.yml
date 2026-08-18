@@ -28,6 +28,8 @@ permissions:
 jobs:
   upload:
     runs-on: ubuntu-26.04
+    env:
+      HAS_GPG_KEY: ${{ secrets.GPG_PRIVATE_KEY != '' && 'true' || 'false' }}
     steps:
     - name: Download release artifact
       uses: actions/download-artifact@v8
@@ -36,7 +38,7 @@ jobs:
         path: dist
 
     - name: Import GPG private key
-      if: secrets.GPG_PRIVATE_KEY != ''
+      if: env.HAS_GPG_KEY == 'true'
       shell: bash
       env:
         GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
@@ -46,7 +48,7 @@ jobs:
         printf '%s' "$GPG_PRIVATE_KEY" | gpg --batch --import
 
     - name: Sign release files
-      if: secrets.GPG_PRIVATE_KEY != ''
+      if: env.HAS_GPG_KEY == 'true'
       shell: bash
       run: |
         set -euo pipefail
@@ -69,7 +71,7 @@ jobs:
         overwrite: true
 
     - name: Upload release signatures
-      if: secrets.GPG_PRIVATE_KEY != ''
+      if: env.HAS_GPG_KEY == 'true'
       uses: svenstaro/upload-release-action@v2
       with:
         file: dist/${{ inputs.file_pattern }}.sig

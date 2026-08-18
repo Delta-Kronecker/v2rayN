@@ -21,9 +21,11 @@ permissions:
 jobs:
   publish:
     runs-on: ubuntu-26.04
+    env:
+      HAS_GPG_KEY: ${{ secrets.GPG_PRIVATE_KEY != '' && 'true' || 'false' }}
     steps:
     - name: Import GPG private key
-      if: secrets.GPG_PRIVATE_KEY != ''
+      if: env.HAS_GPG_KEY == 'true'
       shell: bash
       env:
         GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
@@ -33,7 +35,7 @@ jobs:
         printf '%s' "$GPG_PRIVATE_KEY" | gpg --batch --import
 
     - name: Export GPG public key
-      if: secrets.GPG_PRIVATE_KEY != ''
+      if: env.HAS_GPG_KEY == 'true'
       shell: bash
       run: |
         set -euo pipefail
@@ -42,7 +44,7 @@ jobs:
         gpg --batch --armor --export "$fingerprint" > v2rayN-public-key.asc
 
     - name: Upload GPG public key to release
-      if: secrets.GPG_PRIVATE_KEY != ''
+      if: env.HAS_GPG_KEY == 'true'
       uses: svenstaro/upload-release-action@v2
       with:
         file: v2rayN-public-key.asc
