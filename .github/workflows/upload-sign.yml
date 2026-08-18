@@ -19,7 +19,7 @@ on:
         default: application/octet-stream
     secrets:
       GPG_PRIVATE_KEY:
-        required: true
+        required: false
 
 permissions:
   contents: write
@@ -36,6 +36,7 @@ jobs:
         path: dist
 
     - name: Import GPG private key
+      if: secrets.GPG_PRIVATE_KEY != ''
       shell: bash
       env:
         GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
@@ -45,6 +46,7 @@ jobs:
         printf '%s' "$GPG_PRIVATE_KEY" | gpg --batch --import
 
     - name: Sign release files
+      if: secrets.GPG_PRIVATE_KEY != ''
       shell: bash
       run: |
         set -euo pipefail
@@ -67,6 +69,7 @@ jobs:
         overwrite: true
 
     - name: Upload release signatures
+      if: secrets.GPG_PRIVATE_KEY != ''
       uses: svenstaro/upload-release-action@v2
       with:
         file: dist/${{ inputs.file_pattern }}.sig
